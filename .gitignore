@@ -1,0 +1,27 @@
+# Environnement virtuel
+env/
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Données brutes (trop volumineuses pour GitHub)
+# Téléchargeables sur http://insideairbnb.com/get-the-data/
+data_airbnb_bordeaux/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
