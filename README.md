@@ -71,8 +71,7 @@ projet_rbnb/
 │   ├── neighbourhoods.csv     # Quartiers de Bordeaux Metropole
 │   └── neighbourhoods.geojson # Contours geographiques
 ├── notebooks/
-│   ├── main.ipynb             # Pipeline de traitement des donnees
-│   └── calendar.ipynb         # Analyse des calendriers de disponibilite
+│   └── pipeline.ipynb         # Pipeline complet : nettoyage, feature engineering, classification, recommandations
 ```
 
 ---
@@ -116,14 +115,18 @@ L'application s'ouvre automatiquement dans le navigateur a l'adresse `http://loc
 
 Les donnees traitees (`data/`) sont incluses dans le repository. Les donnees brutes proviennent de [Inside Airbnb](http://insideairbnb.com/get-the-data/) (Bordeaux, France) et ne sont pas incluses en raison de leur taille (>300 Mo). Les notebooks dans `notebooks/` documentent l'ensemble du pipeline de traitement.
 
-### Pipeline de traitement (notebooks)
+### Pipeline de traitement (`notebooks/pipeline.ipynb`)
 
-1. **Nettoyage** : prix, types de chambres, capacite
-2. **Feature engineering** : extraction de 5 equipements cles depuis les amenities JSON
-3. **Calcul d'occupation** : taux de reservation sur 365 jours via `calendar.csv`
-4. **Segmentation** : terciles de prix par quartier et type de logement
-5. **Classification** : seuil au 75e percentile d'occupation dans chaque segment
-6. **Recommandations** : comparaison equipements listing vs profil des leaders du segment
+Le notebook reproduit l'integralite du traitement des donnees brutes :
+
+1. **Chargement** : `listings.csv`, `calendar.csv`, `reviews.csv` depuis Inside Airbnb
+2. **Nettoyage** : prix (suppression `$` et `,`), filtrage des locations courte duree (≤30 nuits)
+3. **Feature engineering** : extraction de 5 equipements cles (Wifi, cuisine, lave-linge, climatisation, parking gratuit) depuis le champ JSON `amenities`
+4. **Calcul d'occupation** : taux de reservation sur 365 jours via le calendrier de disponibilite
+5. **Segmentation** : terciles de prix par quartier + type de logement
+6. **Classification** : seuil au 75e percentile d'occupation dans chaque segment (Top vs Standard)
+7. **Recommandations dynamiques** : comparaison equipements du listing vs profil des leaders du segment
+8. **Export** : generation de `master_final.csv` (10 947 lignes, 33 colonnes)
 
 ---
 
