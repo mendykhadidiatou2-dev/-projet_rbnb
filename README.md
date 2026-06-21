@@ -1,161 +1,96 @@
-# ScalBnB Smart Insights
+# ScalBnB - Audit intelligent d'annonces Airbnb
 
-**Moteur d'audit intelligent pour optimiser les annonces Airbnb sur Bordeaux Metropole.**
+Projet de data science realisé dans le cadre d'une soutenance academique.
 
-ScalBnB analyse les performances de **10 947 logements** Airbnb et fournit a chaque hote un diagnostic personnalise avec un score, des recommandations concretes et un systeme de gamification pour encourager le passage a l'action.
+L'idee de depart : on a recupere les donnees open data de **10 947 annonces Airbnb sur Bordeaux Metropole** (source : [Inside Airbnb](http://insideairbnb.com/get-the-data/)), et on s'est demandé comment aider concretement un hote a comprendre pourquoi son logement se loue moins bien que ses voisins — et surtout quoi faire pour ameliorer ca.
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.58-red?logo=streamlit)
-![Pandas](https://img.shields.io/badge/Pandas-3.0-purple?logo=pandas)
-![License](https://img.shields.io/badge/License-MIT-green)
+Le resultat, c'est une application Streamlit qui permet de taper l'identifiant d'un logement et d'obtenir un diagnostic complet : ou il se situe par rapport a la concurrence, ce qui lui manque, et ce qu'il gagnerait a changer.
 
----
+## Ce que fait l'application
 
-## Apercu de l'application
+Quand on entre un ID de logement, l'app affiche 4 onglets :
 
-L'utilisateur saisit l'identifiant de son logement et obtient instantanement :
+- **Diagnostic** — Le logement est classé Champion, Standard ou Flop selon son taux d'occupation par rapport aux autres logements du meme quartier/type/gamme de prix. On voit tout de suite les equipements manquants et les actions a mener. On a aussi integré une analyse des commentaires voyageurs (469 000+ avis) pour detecter les problemes recurrents (proprete, bruit, literie, etc.).
 
-| Onglet | Fonctionnalite |
-|--------|---------------|
-| **Diagnostic** | Classification du logement (Champion / Standard / Flop), plan d'action personnalise, analyse des retours voyageurs par NLP |
-| **Simulateur** | Checklist interactive : cocher une amelioration recalcule le score en temps reel |
-| **Classement** | Position du logement dans le leaderboard de son quartier |
-| **Email Rapport** | Maquette d'email mensuel gamifie + strategie anti-fatigue (max 2 emails/mois) |
+- **Simulateur** — C'est la partie gamification : chaque recommandation est une case a cocher. Quand on coche "Ajouter le Wifi" ou "Reduire le minimum de nuits", le score se recalcule en direct et on voit tout de suite combien de points on gagne et si on change de niveau.
 
----
+- **Classement** — Le logement est positionné dans un classement par quartier. On peut voir le Top 5 et savoir si on est dans les 25% meilleurs ou les 50% derniers.
 
-## Fonctionnalites techniques
+- **Email Rapport** — Une maquette de ce a quoi ressemblerait un email mensuel envoye a l'hote. L'idee c'est de limiter a 2 emails par mois max pour ne pas spammer, avec un contenu qui change a chaque fois (score, badge, action du mois).
 
-### Score ScalBnB (0-100)
+## Le score ScalBnB
 
-Chaque logement recoit un score composite base sur 4 axes :
+On a construit un score sur 100 qui prend en compte 4 choses :
 
-| Composante | Poids | Source |
-|-----------|-------|--------|
-| Equipements | 30 pts | Wifi, cuisine, lave-linge, climatisation, parking vs profil des leaders du secteur |
-| Taux d'occupation | 30 pts | Jours reserves sur 365 jours vs seuil du segment |
-| Avis clients | 25 pts | Note moyenne des voyageurs (1-5) |
-| Flexibilite (min. nuits) | 15 pts | Ecart avec la strategie des leaders |
+- **Equipements (30 pts)** — Est-ce que le logement a les memes equipements que les meilleurs de son secteur (Wifi, cuisine, lave-linge, clim, parking) ?
+- **Occupation (30 pts)** — Combien de jours il est reserve sur un an, compare au seuil du segment ?
+- **Avis clients (25 pts)** — La note moyenne laissee par les voyageurs.
+- **Nuits minimum (15 pts)** — Est-ce que le logement impose trop de nuits minimum par rapport aux leaders ?
 
-### Systeme de badges
+Selon le score, le logement obtient un badge : Bronze (0-49), Argent (50-69), Or (70-84) ou Diamant (85-100).
 
-| Badge | Score | Description |
-|-------|-------|-------------|
-| Bronze | 0-49 | Logement avec des lacunes significatives |
-| Argent | 50-69 | Marge de progression identifiee |
-| Or | 70-84 | Bon logement, pas encore elite |
-| Diamant | 85-100 | Top performer du secteur |
+## Comment lancer le projet
 
-### Analyse NLP des retours voyageurs
+```bash
+# Cloner le repo
+git clone https://github.com/mendykhadidiatou2-dev/-projet_rbnb.git
+cd -projet_rbnb
 
-L'application analyse **469 309 commentaires** de voyageurs pour detecter 5 categories de problemes recurrents : proprete, bruit, confort de la literie, temperature, et qualite de l'accueil. Un seuil d'alerte se declenche lorsqu'un theme depasse 10% des avis.
+# Creer un environnement virtuel et installer les dependances
+python -m venv env
+env\Scripts\activate        # Windows
+pip install -r requirements.txt
 
-### Strategie anti-fatigue email
+# Lancer l'app
+streamlit run app.py
+```
 
-Pour maximiser l'engagement sans irriter l'utilisateur :
-- **Email 1** (1er du mois) : rapport mensuel avec score, badge et action prioritaire
-- **Email 2** (15 du mois) : envoye uniquement si le score est a moins de 5 points du niveau superieur
-- **Pause automatique** : apres 3 mois au niveau Diamant, passage a 1 email par trimestre
-
----
+Ca ouvre automatiquement le navigateur sur `http://localhost:8501`.
 
 ## Structure du projet
 
 ```
-projet_rbnb/
-├── app.py                     # Application Streamlit principale
-├── requirements.txt           # Dependances Python
-├── data/
-│   ├── master_final.csv       # Dataset enrichi (10 947 logements)
-│   ├── reviews_analysis.csv   # Analyse NLP pre-calculee des avis
-│   ├── neighbourhoods.csv     # Quartiers de Bordeaux Metropole
-│   └── neighbourhoods.geojson # Contours geographiques
-├── notebooks/
-│   └── pipeline.ipynb         # Pipeline complet : nettoyage, feature engineering, classification, recommandations
+app.py                  -> L'application Streamlit (tout le code est la-dedans)
+requirements.txt        -> Les librairies a installer (streamlit, pandas, numpy)
+data/
+  master_final.csv      -> Le dataset final avec les 10 947 logements et leurs scores
+  reviews_analysis.csv  -> L'analyse pre-calculee des commentaires voyageurs
+  neighbourhoods.csv    -> Liste des quartiers
+  neighbourhoods.geojson -> Contours geographiques des quartiers
+notebooks/
+  pipeline.ipynb        -> Le notebook qui genere master_final.csv a partir des donnees brutes
 ```
 
----
+## Le pipeline de donnees
 
-## Installation et lancement
+Tout le traitement est dans `notebooks/pipeline.ipynb`. En gros :
 
-### 1. Cloner le projet
+1. On charge les fichiers bruts d'Inside Airbnb (`listings.csv`, `calendar.csv`, `reviews.csv`)
+2. On nettoie les prix, on filtre les locations courte duree (≤30 nuits)
+3. On extrait 5 equipements cles depuis le champ `amenities` (qui est un gros JSON par annonce)
+4. On calcule le taux d'occupation sur 365 jours grace au calendrier de disponibilite
+5. On decoupe les logements en segments (quartier + type + gamme de prix par terciles)
+6. Dans chaque segment, on classe les logements : ceux au-dessus du 75e percentile d'occupation sont "Tops", les autres "Standard"
+7. On compare les equipements de chaque Standard avec le profil moyen des Tops pour generer des recommandations
+8. On exporte le tout dans `master_final.csv`
 
-```bash
-git clone https://github.com/VOTRE_USERNAME/projet_rbnb.git
-cd projet_rbnb
-```
+Les fichiers bruts ne sont pas dans le repo (trop volumineux, >300 Mo) mais sont telechargeables gratuitement sur [Inside Airbnb](http://insideairbnb.com/get-the-data/).
 
-### 2. Creer l'environnement virtuel
+## Pour tester
 
-```bash
-python -m venv env
-# Windows
-env\Scripts\activate
-# Mac/Linux
-source env/bin/activate
-```
+Quelques IDs a essayer dans l'app :
 
-### 3. Installer les dependances
+- **813125** — Un logement Flop avec des equipements manquants (cuisine, nuits minimum). Score bas, recommandations visibles.
+- **45922084** — Un Flop avec des problemes de proprete detectes dans les avis (57% de mentions negatives).
+- **457462** — Un Standard avec juste une recommandation sur les nuits minimum.
 
-```bash
-pip install -r requirements.txt
-```
+## Technologies
 
-### 4. Lancer l'application
-
-```bash
-streamlit run app.py
-```
-
-L'application s'ouvre automatiquement dans le navigateur a l'adresse `http://localhost:8501`.
-
----
-
-## Donnees
-
-Les donnees traitees (`data/`) sont incluses dans le repository. Les donnees brutes proviennent de [Inside Airbnb](http://insideairbnb.com/get-the-data/) (Bordeaux, France) et ne sont pas incluses en raison de leur taille (>300 Mo). Les notebooks dans `notebooks/` documentent l'ensemble du pipeline de traitement.
-
-### Pipeline de traitement (`notebooks/pipeline.ipynb`)
-
-Le notebook reproduit l'integralite du traitement des donnees brutes :
-
-1. **Chargement** : `listings.csv`, `calendar.csv`, `reviews.csv` depuis Inside Airbnb
-2. **Nettoyage** : prix (suppression `$` et `,`), filtrage des locations courte duree (≤30 nuits)
-3. **Feature engineering** : extraction de 5 equipements cles (Wifi, cuisine, lave-linge, climatisation, parking gratuit) depuis le champ JSON `amenities`
-4. **Calcul d'occupation** : taux de reservation sur 365 jours via le calendrier de disponibilite
-5. **Segmentation** : terciles de prix par quartier + type de logement
-6. **Classification** : seuil au 75e percentile d'occupation dans chaque segment (Top vs Standard)
-7. **Recommandations dynamiques** : comparaison equipements du listing vs profil des leaders du segment
-8. **Export** : generation de `master_final.csv` (10 947 lignes, 33 colonnes)
-
----
-
-## Exemples d'identifiants pour tester
-
-| ID | Profil | Interet |
-|----|--------|---------|
-| `813125` | Flop avec equipements manquants | Recommandations equipements + score bas |
-| `45922084` | Flop avec problemes de proprete | Alertes retours voyageurs (57% avis negatifs) |
-| `457462` | Standard | Recommandation min. nuits |
-| `656926` | Standard avec bonnes reviews | Score moyen, peu d'alertes |
-
----
-
-## Technologies utilisees
-
-- **Python 3.10+** — langage principal
-- **Streamlit** — framework d'application web interactive
-- **Pandas / NumPy** — manipulation et analyse de donnees
-- **NLP par mots-cles** — analyse thematique bilingue (FR/EN) des commentaires voyageurs
-
----
+- Python 3.10+
+- Streamlit
+- Pandas / NumPy
+- Analyse de texte par mots-cles (FR/EN) sur les commentaires voyageurs
 
 ## Auteur
 
-Projet realise dans le cadre d'une soutenance academique.
-
----
-
-## Licence
-
-Ce projet est distribue sous licence MIT. Voir le fichier `LICENSE` pour plus de details.
+Khadidiatou Mendy — Projet academique, 2026.
