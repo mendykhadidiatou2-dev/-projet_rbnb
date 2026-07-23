@@ -16,6 +16,7 @@ build/
 # Données brutes (trop volumineuses pour GitHub)
 # Téléchargeables sur http://insideairbnb.com/get-the-data/
 data_airbnb_bordeaux/
+data/raw/
 
 # IDE
 .idea/
